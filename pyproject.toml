@@ -18,6 +18,10 @@ python = "^3.11"
 slack-bolt = "^1.22.0"
 python-dotenv = "^1.0.1"
 scipy = "1.14.1"
+boto3 = "1.35.76"
+sanic = "^24.12.0"
+uvicorn = "^0.34.0"
+aiohttp = "^3.11.11"
 
 
 [build-system]

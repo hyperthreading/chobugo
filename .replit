@@ -11,5 +11,24 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["sh", "-c", "python3 bolt.py"]
+run = ["sh", "-c", "sanic main:app --port=3000"]
 deploymentTarget = "gce"
+
+[workflows]
+
+[[workflows.workflow]]
+name = "Run Server"
+mode = "sequential"
+author = 662691
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "poetry install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sanic main:app --DEBUG"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

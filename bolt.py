@@ -1,14 +1,18 @@
 
 import os
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_bolt.async_app import AsyncApp
+from slack_bolt.adapter.sanic import AsyncSlackRequestHandler
 
-# Initializes your app with your bot token and socket mode handler
-app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
+app = AsyncApp(token=os.environ.get("SLACK_BOT_TOKEN"))
+
+@app.event("app_mention")
+async def handle_app_mentions(say):
+    await say("What's up?")
+
+handler = AsyncSlackRequestHandler(app)
 
 # Start your app
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()  # take environment variables from .env.
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
-
+    app.start(3000)
