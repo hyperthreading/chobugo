@@ -138,3 +138,17 @@ async def message_test(message, say):
               text="오늘 수업 내용, 어떠셨나요?")
 
     message_timestamp = message['ts']
+
+
+@app.message("proactive_confusing")
+async def message_confusing(message, say):
+    output_messages = messages.processor.trigger_proactive_message(
+        models.User.mock_data(), messages.FindConfusingConceptsTurnProcessor())
+    await say(
+        blocks={
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": ",".join(map(lambda m: m.message, output_messages))
+            },
+        })

@@ -4,16 +4,13 @@ from typing import List
 from abc import ABC, abstractmethod
 from bedrock import get_is_question
 
-
-class NudgeMessage(Enum):
-    AskLectureReaction = "AskLectureReaction"
-    SuddenLectureQuiz = "SuddenLectureQuiz"
-    AskConfusingConcepts = "AskConfusingConcepts"
-    QuestionFromOthers = "QuestionFromOthers"
-    PostAnonymizedQuestion = "PostAnonymizedQuestion"
-    SuggestSharingAnswer = "SuggestSharingAnswer"
-
-
+# class NudgeMessage(Enum):
+#     AskLectureReaction = "AskLectureReaction"
+#     SuddenLectureQuiz = "SuddenLectureQuiz"
+#     FindConfusingConcepts = "FindConfusingConcepts"
+#     QuestionFromOthers = "QuestionFromOthers"
+#     PostAnonymizedQuestion = "PostAnonymizedQuestion"
+#     SuggestSharingAnswer = "SuggestSharingAnswer"
 """
 대화를 어떤식으로 이끌지 결정
 event:message -> process -> say
@@ -44,23 +41,35 @@ class TurnProcessingResult(object):
 
 class TurnProcessor(ABC):
 
-    @abstractmethod
-    def consume(self, user: User,
-                message: List[MessageText]) -> TurnProcessingResult:
-        pass
+    cosumable: bool = False
+    proactive: bool = False
+
+    def consume_messages(self, user: User,
+                         messages: List[MessageText]) -> TurnProcessingResult:
+        raise NotImplementedError()
+
+    def proactive_messages(self, user: User) -> List[MessageText]:
+        raise NotImplementedError()
+
+    def is_my_turn(self, user: User, messages: List[MessageText]) -> bool:
+        raise NotImplementedError()
 
 
 class UserMessageTurnRouter(ABC):
 
     @abstractmethod
-    def next_turn(self) -> TurnProcessor:
+    def next_turn(self, messages: List[MessageText]) -> TurnProcessor:
         pass
 
 
 class TestTurnRouter(UserMessageTurnRouter):
 
-    def next_turn(self) -> TurnProcessor:
-        return AskReactionTurnProcessor()
+    def next_turn(self, messages: List[MessageText]) -> TurnProcessor:
+        if (messages[0].message == "test"):
+            return AskReactionTurnProcessor()
+        if (messages[0].message.startswith("next_confusing")):
+            return FindConfusingTurnProcessor()
+        return FindConfusingConceptsTurnProcessor()
 
 
 class MessageProcessor(object):
@@ -75,32 +84,64 @@ class MessageProcessor(object):
                              message: List[MessageText]) -> List[MessageText]:
         rest_message = message
         output_message = []
-        self.currentTurnProcessor = self.turnRouter.next_turn(
-        ) if self.currentTurnProcessor is None else self.currentTurnProcessor
+        if self.currentTurnProcessor is None:
+            self.currentTurnProcessor = self.turnRouter.next_turn(rest_message)
+
+        turn_processing_result: TurnProcessingResult | None = None
 
         while len(rest_message) > 0:
-            turn_processing_result = self.currentTurnProcessor.consume(
+
+            if turn_processing_result is not None and turn_processing_result.next_turn:
+                self.currentTurnProcessor = self.turnRouter.next_turn(
+                    rest_message)
+
+            turn_processing_result = self.currentTurnProcessor.consume_messages(
                 user, rest_message)
             output_message.extend(turn_processing_result.output_messages)
             rest_message = turn_processing_result.unconsumed_messages
-            if turn_processing_result.next_turn:
-                self.currentTurnProcessor = self.turnRouter.next_turn()
 
         return output_message
 
-    def trigger_proactive_message(self, turn: TurnProcessor) -> List[Message]:
-        return []
+    def trigger_proactive_message(self,
+                                  user: User,
+                                  turn: TurnProcessor) -> List[MessageText]:
+        self.currentTurnProcessor = turn
+        return turn.proactive_messages(user)
 
 
 class AskReactionTurnProcessor(TurnProcessor):
 
-    def consume(self, user: User,
-                message: List[MessageText]) -> TurnProcessingResult:
+    def consume_messages(self, user: User,
+                         messages: List[MessageText]) -> TurnProcessingResult:
         return TurnProcessingResult([MessageText("Hello")], [], True)
 
+    def is_my_turn(self, user: User, messages: List[MessageText]) -> bool:
+        return messages[0].message == "test"
 
-class AskQuestionTurnProcessor(TurnProcessor):
-    pass
+
+class FindConfusingConceptsTurnProcessor(TurnProcessor):
+
+    def consume_messages(self, user: User, messages: List[MessageText]):
+        return TurnProcessingResult([MessageText("아이고 그렇군요")], [], True)
+
+    def proactive_messages(self, user: User) -> List[MessageText]:
+        return [MessageText("요새 헷갈리는 부분은 없으세요?")]
+
+    def is_my_turn(self, user: User, messages: List[MessageText]) -> bool:
+        return messages[0].message == "test2"
+
+
+class HelpClassmateTurnProcessor(TurnProcessor):
+
+    def proactive_messages(self, user: User) -> List[MessageText]:
+        return [MessageText("클래스메이트가 도움을 요청하고 있어요 ㅠㅠ")]
+
+
+class SilentQuestionTurnProcessor(TurnProcessor):
+
+    def consume_messages(self, user: User,
+                         messages: List[MessageText]) -> TurnProcessingResult:
+        return TurnProcessingResult([], [], True)
 
 
 class SuggestSharingTurnProcessor(TurnProcessor):
