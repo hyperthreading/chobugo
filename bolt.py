@@ -3,18 +3,19 @@ from env import SLACK_BOT_TOKEN, SLACK_APP_TOKEN
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+
 # Initializes your app with your bot token and socket mode handler
 app = App(token=SLACK_BOT_TOKEN)
 
 @app.event("app_mention")
-async def handle_app_mentions(say):
-    await say("What's up?")
+def handle_app_mentions(say):
+    say("What's up?")
 
 
 @app.message("hello")
-async def message_hello(message, say):
+def message_hello(message, say):
     # user = message["user"]
-    await say(blocks=[
+    say(blocks=[
         {
             "type": "section",
             "fields": [
