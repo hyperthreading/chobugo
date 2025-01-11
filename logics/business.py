@@ -2,6 +2,7 @@ from logics.models import User, Message, Session
 from enum import Enum
 from typing import List
 from abc import ABC, abstractmethod
+from bedrock import get_is_question
 
 class NudgeMessage(Enum):
     AskLectureReaction = "AskLectureReaction"

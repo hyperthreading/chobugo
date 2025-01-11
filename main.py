@@ -1,33 +1,12 @@
 import asyncio
-import nest_asyncio
-nest_asyncio.apply()
-
-from env import SANIC_PORT
-from sanic import Sanic
-from sanic.response import text
-
-app = Sanic(name="cho-bu-go")
+import slack
+import api
 
 
-@app.get("/")
-async def hello_world(request):
-    return text("Hello, world.")
-
-
-async def run_sanic():
-    app.run(host="0.0.0.0", port=SANIC_PORT)
-
-
-async def run_bolt():
-    import bolt
-    bolt.app.start()
-
-
-async def main():
-    bolt_task = asyncio.create_task(run_bolt())
-    sanic_task = asyncio.create_task(run_sanic())
-    await asyncio.gather(bolt_task, sanic_task)
+def main():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyncio.gather(api.run_async(), slack.run_async()))
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
