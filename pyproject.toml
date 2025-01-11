@@ -25,3 +25,12 @@ pre-commit = "^4.0.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+include = [
+    "bolt.py",
+]
+
+line-length = 120
+indent-width = 4
