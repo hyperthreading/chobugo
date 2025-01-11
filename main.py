@@ -1,7 +1,4 @@
-import os
-from dotenv import load_dotenv
-load_dotenv()  # take environment variables from .env.
-
+from env import PORT
 from sanic import Sanic
 from sanic.request import Request
 import bolt
@@ -14,5 +11,5 @@ async def endpoint(req: Request):
     return await bolt.handler.handle(req)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 3000)))
+    app.run(host="0.0.0.0", port=PORT)
 
