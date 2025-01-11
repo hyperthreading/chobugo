@@ -10,7 +10,43 @@ app = App(token=SLACK_BOT_TOKEN)
 @app.message("hello")
 def message_hello(message, say):
     user = message["user"]
-    say(f"Hello, <@{user}>!")
+    say(blocks=[
+        {
+            "type": "section",
+            "fields": [
+                {
+                    "type": "plain_text",
+                    "text": "오늘 수업 내용, 어떠셨나요?",
+                    "emoji": True
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "재밌었어!",
+                        "emoji": True
+                    },
+                    "value": "reponse_positive"
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "글쎄..좀 어렵던데",
+                        "emoji": True
+                    },
+                    "value": "response_negative"
+                }
+            ]
+        }
+    ],
+        text="오늘 수업 내용, 어떠셨나요?"
+    )
 
 
 # # Start your app
