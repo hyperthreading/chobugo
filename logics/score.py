@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
-from logics.models import Session, Message
+from typing import List
+
+from logics.models import Session, Message, User, get_today_startdate
+
 
 class UserScorer(object):
     sessions: List[Session]
@@ -13,7 +16,7 @@ class UserScorer(object):
         self.bot_messages = bot_messages
 
     @staticmethod
-    def from_user(user: User) -> UserScorer:
+    def from_user(user: User) -> "UserScorer":
         return UserScorer(user.sessions, user.messages, user.bot_messages)
 
     def get_engagement_score(
