@@ -6,6 +6,7 @@ from env import SLACK_BOT_TOKEN, SLACK_APP_TOKEN
 
 app = App(token=SLACK_BOT_TOKEN)
 
+
 @app.message("hello")
 def message_hello(message, say):
     user = message["user"]

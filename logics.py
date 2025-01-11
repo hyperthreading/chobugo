@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List
 from datetime import datetime, timedelta
+
 """
 slack_id
 
@@ -10,10 +11,10 @@ publicity [Private, Moderated, PostingToGroup, PrivateGroup]
 
 sessions
     created_at
-    
+
 nudging_messages
     created_at
-    
+
 responses
     created_at
 """
@@ -72,14 +73,12 @@ class User(object):
         self.publicity = SocialPublicityLevel.Private
         self.sessions = []
 
-    def get_engagement_score(
-        self,
-        start_from: datetime = (get_today_startdate() - timedelta(days=7))
-    ) -> float:
-        return 0.2 * self._get_active_frequency_score(
-            start_from) + 0.3 * self._get_responding_latency_score(
-                start_from) + 0.5 * self._get_responding_frequency_score(
-                    start_from)
+    def get_engagement_score(self, start_from: datetime = (get_today_startdate() - timedelta(days=7))) -> float:
+        return (
+            0.2 * self._get_active_frequency_score(start_from)
+            + 0.3 * self._get_responding_latency_score(start_from)
+            + 0.5 * self._get_responding_frequency_score(start_from)
+        )
 
     def get_publicity(self) -> SocialPublicityLevel:
         """
@@ -92,36 +91,26 @@ class User(object):
     def _get_active_frequency_score(self, start_from: datetime) -> float:
         MAX_ACTIVE_FREQUENCY = 7 * 3  # 3 times a week
 
-        active_session_count = len(
-            list(filter(lambda s: (s.created_at >= start_from),
-                        self.sessions)))
-        active_frequency_score = min(
-            active_session_count / MAX_ACTIVE_FREQUENCY, 1)
+        active_session_count = len(list(filter(lambda s: (s.created_at >= start_from), self.sessions)))
+        active_frequency_score = min(active_session_count / MAX_ACTIVE_FREQUENCY, 1)
         return active_frequency_score
 
     def _get_responding_latency_score(self, start_from) -> float:
-        filtered_nudges = list(
-            filter(lambda m: m.created_at >= start_from,
-                   self.nudging_messages))
+        filtered_nudges = list(filter(lambda m: m.created_at >= start_from, self.nudging_messages))
 
         MAX_RESPONDING_LATENCY = 7 * 24 * 60
 
         latency_list = list(
-            map(lambda m: m.responded_at - m.created_at,
-                filter(lambda m: m.responded_at is not None, filtered_nudges)))
-        avg_latency = sum(map(lambda d: d.seconds / 60,
-                              latency_list)) / len(latency_list)
+            map(lambda m: m.responded_at - m.created_at, filter(lambda m: m.responded_at is not None, filtered_nudges))
+        )
+        avg_latency = sum(map(lambda d: d.seconds / 60, latency_list)) / len(latency_list)
 
         return 1 - min(avg_latency / MAX_RESPONDING_LATENCY, 1)
 
     def _get_responding_frequency_score(self, start_from) -> float:
-        filtered_nudges = list(
-            filter(lambda m: m.created_at >= start_from,
-                   self.nudging_messages))
+        filtered_nudges = list(filter(lambda m: m.created_at >= start_from, self.nudging_messages))
 
-        message_count = len(
-            list(filter(lambda m: m.responded_at is not None,
-                        filtered_nudges)))
+        message_count = len(list(filter(lambda m: m.responded_at is not None, filtered_nudges)))
         return min(message_count / len(filtered_nudges), 1)
 
 
@@ -132,11 +121,11 @@ class User(object):
 
 def get_messages_to_send(user: User):
     """
-        * if (Outsider)
-        * Private -> sendCheeringMessage
-        * Moderated -> forwardQuestions, suggestForwarding, suggestPostingToGroup 
-        * PostingToGroup -> recommendGroupContent, recommendJoiningGroup
-        * PrivateGroup -> askBotPosting, askSelfPosting
+    * if (Outsider)
+    * Private -> sendCheeringMessage
+    * Moderated -> forwardQuestions, suggestForwarding, suggestPostingToGroup
+    * PostingToGroup -> recommendGroupContent, recommendJoiningGroup
+    * PrivateGroup -> askBotPosting, askSelfPosting
     """
     pass
 
@@ -149,7 +138,7 @@ def get_messages_to_send(user: User):
 def forward_message():
     """
     * 파랑새 메시지 포워딩
-        * Outsider 질문 
+        * Outsider 질문
             * 쉬움 → Outsider 답변
             * 어려움 → Insider 답변
         * Insider 답변 → Outsider
