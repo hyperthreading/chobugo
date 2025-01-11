@@ -30,6 +30,13 @@ class Message(object):
     is_starting_turn: bool
 
 
+class MessageText(object):
+    message: str
+
+    def __init__(self, message) -> None:
+        self.message = message
+
+
 def get_today_startdate():
     return datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -52,11 +59,3 @@ class User(object):
         self.activity_segment = ActivitySegment.Outsider
         self.publicity = SocialPublicityLevel.Private
         self.sessions = []
-
-    def get_publicity(self) -> SocialPublicityLevel:
-        """
-        * Publicity Promotion
-        * promote if EngagementThreshold >= requiredScore(publicity)
-            * Threshold { Private: 0, Moderated: 0.36, PostingToGroup: 0.6, PrivateGroup: 0.8 }
-        """
-        return SocialPublicityLevel.Private
