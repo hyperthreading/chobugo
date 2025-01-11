@@ -5,3 +5,20 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 requires-python = ">=3.11"
 dependencies = []
+
+[tool.poetry]
+name = "chobugo"
+version = "0.1.0"
+description = ""
+authors = ["Yejun Kim <662691-hpthrd@users.noreply.replit.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+slack-bolt = "^1.22.0"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
