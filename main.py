@@ -38,8 +38,7 @@
     * Insider 답변 → Outsider
     * Middleware에서 LLM으로 말투 변경
 """
-import 
-
+from scipy.spatial.distance import cosine
 
 class User(object):
   def get_engagement_score(self) -> int:
@@ -85,6 +84,9 @@ db 에 올라가 있는 question 들 임베딩 가져오기
 """
 def get_question_embeddings() -> list[list[float]]:
   return []
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+  return 1 - cosine(a, b)
 
 """
 input: 질문, threshold 
