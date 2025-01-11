@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Any
+from typing import List
 
 
 class ActivitySegment(Enum):
@@ -55,8 +55,13 @@ class User(object):
     bot_messages: List[Message]
     messages: List[Message]
 
-    def __init__(self, slack_id):
+    def __init__(self, slack_id, username):
         self.slack_id = slack_id
+        self.username = username
         self.activity_segment = ActivitySegment.Outsider
         self.publicity = SocialPublicityLevel.Private
         self.sessions = []
+
+    @staticmethod
+    def mock_data():
+        return User("U1", "user1")
