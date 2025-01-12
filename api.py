@@ -37,6 +37,7 @@ async def class_multi_choice(request: Request):
     send_class_multi_choice(channel=get_channel_from_request(request))
     return text("Class multi-choice...")
 
+
 @app.post("/nudge/class/open-question")
 async def class_open_question(request: Request):
     send_class_open_question(channel=get_channel_from_request(request))

@@ -4,6 +4,8 @@ TODO: 현재는 유저에게 보내는 넛지 메세지가 항상 같은 형태�
         현재는 literal string으로 메세지를 보내고 있습니다.
         이를 LLM 모델을 통해 생성된 문장으로 바꾸어주세요.
 """
+from pprint import pprint
+
 from env import SLACK_BOT_TOKEN
 
 from slack_sdk import WebClient
@@ -44,13 +46,12 @@ def send_class_multi_choice(channel: str):
             blocks.text_section("오늘 수업에서 다뤘던 주제를 다 골라보시오~"),
             blocks.button_actions_section(
                 [
-                    blocks.ButtonElement("네트워크 7계층", EnumResp.correct.value),
-                    blocks.ButtonElement("TCP", EnumResp.correct.value),
-                    blocks.ButtonElement("SSL", EnumResp.incorrect.value),
+                    blocks.ButtonElement("네트워크 7계층", EnumResp.correct_id()),
+                    blocks.ButtonElement("TCP", EnumResp.correct_id()),
+                    blocks.ButtonElement("SSL", EnumResp.incorrect_id()),
                 ]
             )
-        ]
-    )
+        ]    )
     return response
 
 def send_class_open_question(channel: str):
