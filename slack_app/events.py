@@ -1,13 +1,13 @@
 from . import app
 from logics import messages
 from logics import models
+import json
 from slack.enum import EnumResp
 
 
 @app.event("app_mention")
 async def handle_app_mentions(say):
     await say("What's up?")
-
 
 @app.message("hello")
 async def message_hello(message, say):
@@ -93,8 +93,38 @@ async def message_confusing(message, say):
     output_messages = messages.processor.trigger_proactive_message(
         models.User.mock_data(), messages.FindConfusingConceptsTurnProcessor())
     await say(
+<<<<<<< HEAD:slack/events.py
         text={
             "type": "plain_text",
             "text": ",".join(map(lambda m: m.message, output_messages))
         },
     )
+=======
+        blocks={
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "text": ",".join(map(lambda m: m.message, output_messages))
+            },
+        })
+
+
+@app.message()
+async def every_message(message, say):
+    if message.get("subtype", None) is not None:
+        return
+
+    user = models.UserRepository.create_or_get_user(message["user"])
+    user.add_messages([models.MessageText(message["text"])], False)
+    # output_messages = messages.processor.process_user_message(
+    #     user, message["text"])
+
+
+@app.message()
+async def every_bot_message(message, say):
+    if message.get("subtype", None) != "bot_message":
+        return
+
+    user = models.UserRepository.create_or_get_user(message["user"])
+    user.add_bot_messages([models.MessageText(message["text"])], True)
+>>>>>>> cc9f1ff (update):slack_app/events.py

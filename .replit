@@ -11,10 +11,11 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["sh", "-c", "sanic main:app --port=3000"]
+run = ["sh", "-c", "python3 main.py"]
 deploymentTarget = "gce"
 
 [workflows]
+runButton = "Run Server"
 
 [[workflows.workflow]]
 name = "Run Server"
@@ -27,7 +28,7 @@ args = "poetry install"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "sanic main:app --DEBUG"
+args = "python3 main.py"
 
 [[ports]]
 localPort = 3000

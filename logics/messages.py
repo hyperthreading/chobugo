@@ -1,6 +1,9 @@
 from logics.models import MessageText, User, Message
 from typing import List
 from abc import ABC, abstractmethod
+from ml.bedrock import get_is_question
+from logics.llm import determine_message_intent
+
 
 # class NudgeMessage(Enum):
 #     AskLectureReaction = "AskLectureReaction"
@@ -63,9 +66,13 @@ class UserMessageTurnRouter(ABC):
 class TestTurnRouter(UserMessageTurnRouter):
 
     def next_turn(self, messages: List[MessageText]) -> TurnProcessor:
+        print(determine_message_intent(messages[0].message))
+
         if (messages[0].message == "test"):
             return AskReactionTurnProcessor()
-        if (messages[0].message.startswith("next_confusing")):
+
+        is_question = get_is_question(messages[0].message)
+        if (is_question):
             return FindConfusingConceptsTurnProcessor()
         return FindConfusingConceptsTurnProcessor()
 
@@ -100,27 +107,43 @@ class MessageProcessor(object):
 
         return output_message
 
-    def trigger_proactive_message(self,
-                                  user: User,
+    def trigger_proactive_message(self, user: User,
                                   turn: TurnProcessor) -> List[MessageText]:
         self.currentTurnProcessor = turn
         return turn.proactive_messages(user)
 
 
+"""
+수업 어떘어요
+"""
+
+
 class AskReactionTurnProcessor(TurnProcessor):
+    """
+    테스트
+    """
 
     def consume_messages(self, user: User,
                          messages: List[MessageText]) -> TurnProcessingResult:
-        return TurnProcessingResult([MessageText("Hello")], [], True)
+        return TurnProcessingResult([MessageText("수업 어땠어요?")], [], True)
+
+    def proactive_messages(self, user: User) -> List[MessageText]:
+        return [MessageText("수업 어땠어요?")]
 
     def is_my_turn(self, user: User, messages: List[MessageText]) -> bool:
         return messages[0].message == "test"
 
 
+"""
+헷갈리는 거 있으세요?
+"""
+
+
 class FindConfusingConceptsTurnProcessor(TurnProcessor):
 
     def consume_messages(self, user: User, messages: List[MessageText]):
-        return TurnProcessingResult([MessageText("아이고 그렇군요")], [], True)
+        
+        return TurnProcessingResult([MessageText("아이고 그렇군요 제가 도와드릴게요!")], [], True)
 
     def proactive_messages(self, user: User) -> List[MessageText]:
         return [MessageText("요새 헷갈리는 부분은 없으세요?")]
@@ -132,14 +155,22 @@ class FindConfusingConceptsTurnProcessor(TurnProcessor):
 class HelpClassmateTurnProcessor(TurnProcessor):
 
     def proactive_messages(self, user: User) -> List[MessageText]:
-        return [MessageText("클래스메이트가 도움을 요청하고 있어요 ㅠㅠ")]
+        return [MessageText("클래스메이트가 도움을 요청하고 있어요 ㅠㅠ 좀 도와주실래요?")]
 
 
-class SilentQuestionTurnProcessor(TurnProcessor):
+"""
+혹시 질문하고 싶은데, 좀 부담스러우면 제가 한번 조용히 물어볼까요?
+"""
+
+
+class AnonymousQuestionTurnProcessor(TurnProcessor):
 
     def consume_messages(self, user: User,
                          messages: List[MessageText]) -> TurnProcessingResult:
         return TurnProcessingResult([], [], True)
+
+    def proactive_messages(self, user: User) -> List[MessageText]:
+        return [MessageText("혹시 질문하고 싶은데, 좀 부담스러우면 제가 한번 조용히 물어볼까요?")]
 
 
 class SuggestSharingTurnProcessor(TurnProcessor):

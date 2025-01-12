@@ -34,6 +34,5 @@ async def handle_slack_web_app(handler):
     # wait for finish signal
     await runner.cleanup()
 
-
 if __name__ == "__main__":
-    run()
+  run()
