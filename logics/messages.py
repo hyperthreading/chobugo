@@ -217,7 +217,7 @@ class RecognizeTurnProcessor(TurnProcessor):
                 "상대방이 더 질문을 하길 원할까?", ["yes", "no"], messages[0].message)
             if intent == "no":
                 return TurnProcessingResult([MessageText("그럼 더 안물어볼게요!")], [],
-                                            False)
+                                            True)
             if intent == "yes":
                 self.question_left = conversation_helper.ask_followup_question(
                     self.explanation, 2)
