@@ -40,9 +40,7 @@ def send_class_catchup(channel: str):
 
 
 def send_class_multi_choice(channel: str):
-    response = client.chat_postMessage(
-        channel=channel,
-        blocks=[
+    block = [
             blocks.text_section("오늘 수업에서 다뤘던 주제를 다 골라보시오~"),
             blocks.button_actions_section(
                 [
@@ -51,7 +49,12 @@ def send_class_multi_choice(channel: str):
                     blocks.ButtonElement("SSL", EnumResp.incorrect_id()),
                 ]
             )
-        ]    )
+        ]
+    pprint(block)
+    response = client.chat_postMessage(
+        channel=channel,
+        blocks=block
+    )
     return response
 
 def send_class_open_question(channel: str):
