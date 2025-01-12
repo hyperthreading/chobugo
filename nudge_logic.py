@@ -10,7 +10,7 @@ from env import SLACK_BOT_TOKEN
 
 from slack_sdk import WebClient
 
-from slack.enum import EnumResp
+from slack_app.enum import EnumResp
 import message_blocks as blocks
 
 client = WebClient(token=SLACK_BOT_TOKEN)
