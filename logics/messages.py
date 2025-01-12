@@ -219,16 +219,16 @@ def forward_message():
     pass
 
 
-"""
-여기서 점수 계산 ㄱㄱ
-"""
+# """
+# 여기서 점수 계산 ㄱㄱ
+# """
 
 
-def scheduled_analyze():
-    for user in get_all_users():
-        score = user.get_engagement_score()
-        publicity = user.get_publicity()
+# def scheduled_analyze():
+#     for user in get_all_users():
+#         score = user.get_engagement_score()
+#         publicity = user.get_publicity()
 
 
-def get_all_users() -> list[User]:
-    return []
+# def get_all_users() -> list[User]:
+#     return []
