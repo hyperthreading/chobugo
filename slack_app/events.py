@@ -2,12 +2,13 @@ from . import app
 from logics import messages
 from logics import models
 import json
-from slack.enum import EnumResp
+from slack_app.enum import EnumResp
 
 
 @app.event("app_mention")
 async def handle_app_mentions(say):
     await say("What's up?")
+
 
 @app.message("hello")
 async def message_hello(message, say):
@@ -37,7 +38,7 @@ async def message_hello(message, say):
             "action_id": EnumResp.negative.value
         }]
     }],
-        text="오늘 수업 내용, 어떠셨나요?")
+              text="오늘 수업 내용, 어떠셨나요?")
 
     message_timestamp = message['ts']
 
@@ -83,30 +84,14 @@ async def message_test(message, say):
             "action_id": "response_negative"
         }]
     }],
-        text="오늘 수업 내용, 어떠셨나요?")
+              text="오늘 수업 내용, 어떠셨나요?")
 
     message_timestamp = message['ts']
 
 
-@app.message("proactive_confusing")
-async def message_confusing(message, say):
-    output_messages = messages.processor.trigger_proactive_message(
-        models.User.mock_data(), messages.FindConfusingConceptsTurnProcessor())
-    await say(
-<<<<<<< HEAD:slack/events.py
-        text={
-            "type": "plain_text",
-            "text": ",".join(map(lambda m: m.message, output_messages))
-        },
-    )
-=======
-        blocks={
-            "type": "section",
-            "text": {
-                "type": "plain_text",
-                "text": ",".join(map(lambda m: m.message, output_messages))
-            },
-        })
+"""
+메시지 쌓는거 테스트중
+"""
 
 
 @app.message()
@@ -127,4 +112,3 @@ async def every_bot_message(message, say):
 
     user = models.UserRepository.create_or_get_user(message["user"])
     user.add_bot_messages([models.MessageText(message["text"])], True)
->>>>>>> cc9f1ff (update):slack_app/events.py
