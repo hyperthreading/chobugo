@@ -26,6 +26,7 @@ ruff = "^0.9.1"
 pre-commit = "^4.0.1"
 requests = "2.32.3"
 nest-asyncio = "^1.6.0"
+slack-sdk = "^3.34.0"
 
 
 [build-system]
