@@ -1,8 +1,6 @@
 from logics.models import MessageText, User, Message
-from enum import Enum
 from typing import List
 from abc import ABC, abstractmethod
-from bedrock import get_is_question
 
 # class NudgeMessage(Enum):
 #     AskLectureReaction = "AskLectureReaction"
@@ -68,7 +66,7 @@ class TestTurnRouter(UserMessageTurnRouter):
         if (messages[0].message == "test"):
             return AskReactionTurnProcessor()
         if (messages[0].message.startswith("next_confusing")):
-            return FindConfusingTurnProcessor()
+            return FindConfusingConceptsTurnProcessor()
         return FindConfusingConceptsTurnProcessor()
 
 
@@ -158,7 +156,7 @@ def get_messages_to_send(user: User):
     """
         * if (Outsider)
         * Private -> sendCheeringMessage
-        * Moderated -> forwardQuestions, suggestForwarding, suggestPostingToGroup 
+        * Moderated -> forwardQuestions, suggestForwarding, suggestPostingToGroup
         * PostingToGroup -> recommendGroupContent, recommendJoiningGroup
         * PrivateGroup -> askBotPosting, askSelfPosting
     """
@@ -181,7 +179,7 @@ def is_new_turn(user: User, message: Message) -> bool:
 def forward_message():
     """
     * 파랑새 메시지 포워딩
-        * Outsider 질문 
+        * Outsider 질문
             * 쉬움 → Outsider 답변
             * 어려움 → Insider 답변
         * Insider 답변 → Outsider

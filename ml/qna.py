@@ -10,7 +10,7 @@ def get_embedding(question: str) -> list[float]:
 
 
 """
-db 에 올라가 있는 question 들 임베딩 가져오기 
+db 에 올라가 있는 question 들 임베딩 가져오기
 """
 def get_question_embeddings() -> list[list[float]]:
   return []
@@ -19,7 +19,7 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
   return 1 - cosine(a, b)
 
 """
-input: 질문, threshold 
+input: 질문, threshold
 output: cosine similarity 가 threshold 이하인 질문 리스트
 """
 def get_similar_questions(question: str, threshold: float) -> list[str]:

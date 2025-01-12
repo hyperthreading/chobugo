@@ -1,6 +1,7 @@
 from . import app
 from logics import messages
 from logics import models
+from slack.enum import EnumResp
 
 
 @app.event("app_mention")
@@ -26,14 +27,14 @@ async def message_hello(message, say):
                 "type": "plain_text",
                 "text": "재밌었어!",
             },
-            "action_id": "reponse_positive"
+            "action_id": EnumResp.positive.value,
         }, {
             "type": "button",
             "text": {
                 "type": "plain_text",
                 "text": "글쎄..좀 어렵던데",
             },
-            "action_id": "response_negative"
+            "action_id": EnumResp.negative.value
         }]
     }],
         text="오늘 수업 내용, 어떠셨나요?")
@@ -41,7 +42,7 @@ async def message_hello(message, say):
     message_timestamp = message['ts']
 
 
-@app.action("reponse_positive")
+@app.action(EnumResp.positive.value)
 async def handle_button_click(ack, body, say):
     global message_timestamp
     await ack()
