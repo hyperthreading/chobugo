@@ -2,9 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 from replit import db
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
 from uuid import uuid4
+from pydantic import BaseModel, field_serializer
 
 
 class ActivitySegment(Enum):
@@ -24,9 +23,7 @@ class Session(object):
     user_id: int
 
 
-@dataclass_json
-@dataclass
-class Message(object):
+class Message(BaseModel):
     created_at: datetime
     user_id: int
     message_id: str
@@ -35,6 +32,11 @@ class Message(object):
     responded_by: str | None
     continued_by: str | None
     is_starting_turn: bool
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        # Customize the output as needed
+        return value.isoformat()  # e.g. drop microseconds
 
 
 class MessageText(object):
@@ -48,13 +50,16 @@ def get_today_startdate():
     return datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-@dataclass_json
-@dataclass
-class User(object):
+class User(BaseModel):
     id: int
     slack_id: str
     username: str
     created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        # Customize the output as needed
+        return value.isoformat()  # e.g. drop microseconds
 
     # activity_segment: ActivitySegment
     # publicity: SocialPublicityLevel
@@ -65,11 +70,21 @@ class User(object):
 
     @staticmethod
     def mock_data():
-        return User(0, "user1", "user1", get_today_startdate(), [], [])
+        return User(id=0,
+                    slack_id="user1",
+                    username="user1",
+                    created_at=get_today_startdate(),
+                    bot_messages=[],
+                    messages=[])
 
     @staticmethod
     def create(slack_id: str):
-        return User(0, slack_id, slack_id, get_today_startdate(), [], [])
+        return User(id=0,
+                    slack_id=slack_id,
+                    username=slack_id,
+                    created_at=get_today_startdate(),
+                    bot_messages=[],
+                    messages=[])
 
     def add_messages(self, message_text_list: List[MessageText],
                      is_starting_turn: bool):
@@ -122,19 +137,22 @@ _user_cache: dict[str, User] = {}
 class UserRepository(object):
 
     @staticmethod
-    def get_user(slack_id: str) -> User:
-        return User.from_json(db[slack_id])
+    def get_user(slack_id: str) -> User | None:
+        user_json = db.get(slack_id, None)
+        if user_json is None:
+            return None
+        return User(**user_json)
 
     @staticmethod
     def create_or_get_user(slack_id: str) -> User:
-        user_json = db[slack_id]
-        if user_json is None:
-            user = User.create(slack_id)
-            db[slack_id] = user.to_json()
+        user = UserRepository.get_user(slack_id)
+        if user is not None:
             return user
-        return User.from_json(user_json)
+        user = User.create(slack_id)
+        db[slack_id] = user.model_dump()
+        return user
 
     @staticmethod
     def save_user(user: User):
         _user_cache[user.slack_id] = user
-        db[user.slack_id] = user.to_json()
+        db[user.slack_id] = user.model_dump()

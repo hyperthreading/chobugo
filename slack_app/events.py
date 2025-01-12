@@ -99,16 +99,12 @@ async def every_message(message, say):
     if message.get("subtype", None) is not None:
         return
 
+    if message.get("channel_type", None) == "im":
+        print("Im", message)
+
     user = models.UserRepository.create_or_get_user(message["user"])
     user.add_messages([models.MessageText(message["text"])], False)
-    # output_messages = messages.processor.process_user_message(
-    #     user, message["text"])
-
-
-@app.message()
-async def every_bot_message(message, say):
-    if message.get("subtype", None) != "bot_message":
-        return
-
-    user = models.UserRepository.create_or_get_user(message["user"])
-    user.add_bot_messages([models.MessageText(message["text"])], True)
+    output_messages = messages.processor.process_user_message(
+        user, [models.MessageText(message["text"])])
+    user.add_bot_messages(output_messages, False)
+    await say(f"응답: {output_messages[0].message}")

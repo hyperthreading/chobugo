@@ -1,9 +1,8 @@
 from logics.models import MessageText, User, Message
 from typing import List
 from abc import ABC, abstractmethod
-from ml.bedrock import get_is_question
-from logics.llm import determine_message_intent
-
+from ml.bedrock import get_is_question, get_is_explanation, get_is_smalltalk, get_answer
+from logics.llm import determine_message_type, determine_message_intent, determine_message_validity
 
 # class NudgeMessage(Enum):
 #     AskLectureReaction = "AskLectureReaction"
@@ -42,7 +41,7 @@ class TurnProcessingResult(object):
 
 class TurnProcessor(ABC):
 
-    cosumable: bool = False
+    consumable: bool = False
     proactive: bool = False
 
     def consume_messages(self, user: User,
@@ -66,14 +65,22 @@ class UserMessageTurnRouter(ABC):
 class TestTurnRouter(UserMessageTurnRouter):
 
     def next_turn(self, messages: List[MessageText]) -> TurnProcessor:
+        print(f"Analyzing messages: {messages[0].message}")
         print(determine_message_intent(messages[0].message))
 
         if (messages[0].message == "test"):
             return AskReactionTurnProcessor()
 
         is_question = get_is_question(messages[0].message)
-        if (is_question):
+        is_explanation = get_is_explanation(messages[0].message)
+        is_smalltalk = get_is_smalltalk(messages[0].message)
+
+        if is_question:
             return FindConfusingConceptsTurnProcessor()
+        elif is_explanation:
+            return HelpClassmateTurnProcessor()
+        elif is_smalltalk:
+            return EndTurnTurnProcessor()
         return FindConfusingConceptsTurnProcessor()
 
 
@@ -87,6 +94,11 @@ class MessageProcessor(object):
 
     def process_user_message(self, user: User,
                              message: List[MessageText]) -> List[MessageText]:
+
+        # Testing
+        print('intent', determine_message_type(message[0].message))
+        print('validity', determine_message_validity(message[0].message))
+
         rest_message = message
         output_message = []
         if self.currentTurnProcessor is None:
@@ -142,8 +154,9 @@ class AskReactionTurnProcessor(TurnProcessor):
 class FindConfusingConceptsTurnProcessor(TurnProcessor):
 
     def consume_messages(self, user: User, messages: List[MessageText]):
-        
-        return TurnProcessingResult([MessageText("아이고 그렇군요 제가 도와드릴게요!")], [], True)
+        get_answer(messages[0].message)
+        return TurnProcessingResult([MessageText("아이고 그렇군요 제가 도와드릴게요!")], [],
+                                    True)
 
     def proactive_messages(self, user: User) -> List[MessageText]:
         return [MessageText("요새 헷갈리는 부분은 없으세요?")]
@@ -171,6 +184,21 @@ class AnonymousQuestionTurnProcessor(TurnProcessor):
 
     def proactive_messages(self, user: User) -> List[MessageText]:
         return [MessageText("혹시 질문하고 싶은데, 좀 부담스러우면 제가 한번 조용히 물어볼까요?")]
+
+
+"""
+저는 잡담에는 소질이 없어요 ㅠㅠ
+"""
+
+
+class EndTurnTurnProcessor(TurnProcessor):
+
+    def consume_messages(self, user: User, messages: List[MessageText]):
+        return TurnProcessingResult([MessageText("저는 잡담에는 소질이 없어요 ㅠㅠ")], [],
+                                    True)
+
+    def is_my_turn(self, user: User, messages: List[MessageText]) -> bool:
+        return messages[0].message == "test2"
 
 
 class SuggestSharingTurnProcessor(TurnProcessor):
@@ -223,12 +251,10 @@ def forward_message():
 # 여기서 점수 계산 ㄱㄱ
 # """
 
-
 # def scheduled_analyze():
 #     for user in get_all_users():
 #         score = user.get_engagement_score()
 #         publicity = user.get_publicity()
-
 
 # def get_all_users() -> list[User]:
 #     return []

@@ -2,8 +2,9 @@ import random
 
 from env import SANIC_PORT
 from sanic import Sanic
-from sanic.response import text
+from sanic.response import text, json
 from sanic.request import Request
+from logics import models
 
 from nudge_logic import send_class_open_question, send_class_catchup, send_class_multi_choice
 
@@ -22,9 +23,11 @@ def get_channel_from_request(request: Request):
 async def hello_world(request):
     return text("Hello chobugo~")
 
+
 @app.get("/nudge")
 async def nudging(request):
     return text("Nudging...")
+
 
 @app.post("/nudge/class/catchup")
 async def class_catchup(request: Request):
@@ -43,6 +46,7 @@ async def class_open_question(request: Request):
     send_class_open_question(channel=get_channel_from_request(request))
     return text("Class open-question...")
 
+
 @app.post("/nudge/class/random")
 async def class_random(request: Request):
     match random.randint(0, 2):
@@ -53,6 +57,14 @@ async def class_random(request: Request):
         case 2:
             send_class_open_question(channel=get_channel_from_request(request))
     return text("Class random...")
+
+
+@app.get("/users/<slack_id>")
+async def get_user(request: Request, slack_id):
+    user = models.UserRepository.get_user(slack_id)
+    if user is None:
+        return json({"error": "User not found"})
+    return json(user.model_dump())
 
 
 def run():

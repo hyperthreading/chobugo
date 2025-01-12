@@ -1,8 +1,12 @@
 import requests
+import json
 
 BEDROCK_URL = "http://18.234.222.190:5000"
 QUESTION_EMBEDDING_URL = f"{BEDROCK_URL}/question-embedding"
 QUESTION_CLASSIFIER_URL = f"{BEDROCK_URL}/is-question"
+EXPLANATION_CLASSIFIER_URL = f"{BEDROCK_URL}/is-explanation"
+SMALLTALK_CLASSIFIER_URL = f"{BEDROCK_URL}/is-smalltalk"
+ANSWER_URL = f"{BEDROCK_URL}/answer"
 
 def get_question_embedding(question: str) -> list[float]:
   payload = { 'text': question }
@@ -13,9 +17,28 @@ def get_question_embedding(question: str) -> list[float]:
 
 
 def get_is_question(text: str) -> bool:
-  payload = { 'text': text }
+  params = {"text": text}
 
-  response = requests.request("GET", QUESTION_CLASSIFIER_URL, data=payload)
-  response_json = response.json()
-  print(response_json)
-  return response_json
+  response = requests.get(QUESTION_CLASSIFIER_URL, params=params)
+  print(response.json())
+  return response.json().get("is_question")
+
+def get_is_explanation(text: str) -> bool:
+  params = {"text": text}
+
+  response = requests.get(EXPLANATION_CLASSIFIER_URL, params=params)
+  print(response.json())
+  return response.json().get("is_explanation")
+
+def get_is_smalltalk(text: str) -> bool:
+  params = {"text": text}
+
+  response = requests.get(SMALLTALK_CLASSIFIER_URL, params=params)
+  print(response.json())
+  return response.json().get("is_smalltalk")
+
+def get_answer(question: str) -> str:
+  params = { "question": question }
+  response = requests.get(ANSWER_URL, params=params)
+  print(response.json())
+  return response.json().get("answer")
