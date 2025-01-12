@@ -1,4 +1,5 @@
 from openai import OpenAI
+from typing import Literal
 import json
 
 
@@ -172,7 +173,9 @@ def determine_message_validity(message):
         return json.loads(content_json)['score']
 
 
-def determine_message_type(message):
+def determine_message_type(
+    message
+) -> Literal["explanation"] | Literal["question"] | Literal["other"]:
 
     system_prompt = f"""
     You should classify the message's intent provided by the user in the three class.
@@ -256,71 +259,68 @@ def determine_message_type(message):
 
 def scoring_message(message):
     client = OpenAI()
-    
+
     response = client.chat.completions.create(
-      model="gpt-4o",
-      messages=[
-        {
-          "role": "system",
-          "content": [
-            {
-              "type": "text",
-              "text": "Evaluate the correctness of the following explanation on a scale from 0 (wrong) to 100 (clearly correct).  Also evaluate confidence score of explanation. input_explanation should be summary of explanation, in korean."
-            }
-          ]
-        },
-        {
-          "role": "user",
-          "content": [
-            {
-              "type": "text",
-              "text": "Evaluate the scores for each messages.\n{ \"message\": \"스택은 데이터를 쌓는 구조고 큐는 아마 뭔가 먼저 넣은 것부터 꺼내는 거 같다.\" }\n{ \"message\": \"1+5는 7일지도 모른다.\" }\n{ \"message\": \"분명히 해는 서쪽에서 뜬다.\" }"
-            }
-          ]
-        }
-      ],
-      response_format={
-        "type": "json_schema",
-        "json_schema": {
-          "name": "correctness_score_list",
-          "strict": True,
-          "schema": {
-            "type": "object",
-            "required": [
-              "scores"
-            ],
-            "properties": {
-              "scores": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": [
-                    "input_explanation",
-                    "correctness_score",
-                    "confidence_score"
-                  ],
-                  "properties": {
-                    "input_explanation": {
-                      "type": "string"
+        model="gpt-4o",
+        messages=[{
+            "role":
+            "system",
+            "content": [{
+                "type":
+                "text",
+                "text":
+                "Evaluate the correctness of the following explanation on a scale from 0 (wrong) to 100 (clearly correct).  Also evaluate confidence score of explanation. input_explanation should be summary of explanation, in korean."
+            }]
+        }, {
+            "role":
+            "user",
+            "content": [{
+                "type":
+                "text",
+                "text":
+                "Evaluate the scores for each messages.\n{ \"message\": \"스택은 데이터를 쌓는 구조고 큐는 아마 뭔가 먼저 넣은 것부터 꺼내는 거 같다.\" }\n{ \"message\": \"1+5는 7일지도 모른다.\" }\n{ \"message\": \"분명히 해는 서쪽에서 뜬다.\" }"
+            }]
+        }],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "correctness_score_list",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "required": ["scores"],
+                    "properties": {
+                        "scores": {
+                            "type": "array",
+                            "items": {
+                                "type":
+                                "object",
+                                "required": [
+                                    "input_explanation", "correctness_score",
+                                    "confidence_score"
+                                ],
+                                "properties": {
+                                    "input_explanation": {
+                                        "type": "string"
+                                    },
+                                    "correctness_score": {
+                                        "type": "number"
+                                    },
+                                    "confidence_score": {
+                                        "type": "number"
+                                    }
+                                },
+                                "additionalProperties":
+                                False
+                            }
+                        }
                     },
-                    "correctness_score": {
-                      "type": "number"
-                    },
-                    "confidence_score": {
-                      "type": "number"
-                    }
-                  },
-                  "additionalProperties": False
+                    "additionalProperties": False
                 }
-              }
-            },
-            "additionalProperties": False
-          }
-        }
-      },
-      temperature=0.67,
-      max_completion_tokens=10000,
-      top_p=1,
-      frequency_penalty=0,
-      presence_penalty=0
-    )
+            }
+        },
+        temperature=0.67,
+        max_completion_tokens=10000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0)

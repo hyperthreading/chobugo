@@ -1,9 +1,9 @@
 from logics.models import MessageText, User, Message
-from typing import List
+from typing import Literal, List
 from abc import ABC, abstractmethod
 from ml.bedrock import get_is_question, get_is_explanation, get_is_smalltalk, get_answer
 from logics.llm import determine_message_type, determine_message_intent, determine_message_validity
-
+from logics import conversation_helper
 # class NudgeMessage(Enum):
 #     AskLectureReaction = "AskLectureReaction"
 #     SuddenLectureQuiz = "SuddenLectureQuiz"
@@ -84,9 +84,22 @@ class TestTurnRouter(UserMessageTurnRouter):
         return FindConfusingConceptsTurnProcessor()
 
 
+class DemoTurnRouter(UserMessageTurnRouter):
+
+    def next_turn(self, messages: List[MessageText]) -> TurnProcessor:
+        msg_type = determine_message_type(messages[0].message)
+        if msg_type == "explanation":
+            return RecognizeTurnProcessor()
+        elif msg_type == "question":
+            return FindConfusingConceptsTurnProcessor()
+        else:
+            return EndTurnTurnProcessor()
+
+
 class MessageProcessor(object):
     turnRouter: UserMessageTurnRouter
     currentTurnProcessor: TurnProcessor | None
+    turnEndedBefore: bool = False
 
     def __init__(self, turnRouter: UserMessageTurnRouter):
         self.turnRouter = turnRouter
@@ -95,14 +108,11 @@ class MessageProcessor(object):
     def process_user_message(self, user: User,
                              message: List[MessageText]) -> List[MessageText]:
 
-        # Testing
-        print('intent', determine_message_type(message[0].message))
-        print('validity', determine_message_validity(message[0].message))
-
         rest_message = message
         output_message = []
-        if self.currentTurnProcessor is None:
+        if (self.currentTurnProcessor is None) or self.turnEndedBefore:
             self.currentTurnProcessor = self.turnRouter.next_turn(rest_message)
+            self.turnEndedBefore = False
 
         turn_processing_result: TurnProcessingResult | None = None
 
@@ -111,11 +121,11 @@ class MessageProcessor(object):
             if turn_processing_result is not None and turn_processing_result.next_turn:
                 self.currentTurnProcessor = self.turnRouter.next_turn(
                     rest_message)
-
             turn_processing_result = self.currentTurnProcessor.consume_messages(
                 user, rest_message)
             output_message.extend(turn_processing_result.output_messages)
             rest_message = turn_processing_result.unconsumed_messages
+            self.turnEndedBefore = turn_processing_result.next_turn
 
         return output_message
 
@@ -153,16 +163,71 @@ class AskReactionTurnProcessor(TurnProcessor):
 
 class FindConfusingConceptsTurnProcessor(TurnProcessor):
 
+    current_step: Literal["Start"] | Literal["explanation"]
+
+    def __init__(self):
+        self.current_step = "Start"
+
     def consume_messages(self, user: User, messages: List[MessageText]):
-        get_answer(messages[0].message)
-        return TurnProcessingResult([MessageText("아이고 그렇군요 제가 도와드릴게요!")], [],
-                                    True)
+        if self.current_step == "Start":
+            self.current_step = "explanation"
+            return TurnProcessingResult(
+                [MessageText("헷갈리면 제가 도와드릴게요! 어떤 부분이 궁금하세요?")], [], False)
+        intent = conversation_helper.analyze_intent("상대방이 내가 질문에 답하기를 원할까?",
+                                                    ["yes", "no"],
+                                                    messages[0].message)
+        if intent == "no":
+            return TurnProcessingResult([MessageText("알겠어요 나중에 또 물어봐요!")], [],
+                                        True)
+
+        explanation = conversation_helper.explain(messages[0].message)
+        return TurnProcessingResult([MessageText(explanation)], [], False)
 
     def proactive_messages(self, user: User) -> List[MessageText]:
         return [MessageText("요새 헷갈리는 부분은 없으세요?")]
 
     def is_my_turn(self, user: User, messages: List[MessageText]) -> bool:
         return messages[0].message == "test2"
+
+
+"""
+우와 정말 똑똑하시네요...
+"""
+
+
+class RecognizeTurnProcessor(TurnProcessor):
+
+    current_step: Literal["wow"] | Literal["permission"] | Literal["questions"]
+    question_left: List[str]
+    explanation: str | None
+
+    def __init__(self) -> None:
+        self.current_step = "wow"
+        self.explanation = None
+        self.question_left = []
+
+    def consume_messages(self, user: User, messages: List[MessageText]):
+        if self.current_step == "wow":
+            self.explanation = messages[0].message
+            self.current_step = "permission"
+            return TurnProcessingResult(
+                [MessageText("우와 설명을 정말 잘하시네요! 제가 좀 더 물어봐도 될까요?")], [], False)
+        elif self.current_step == "permission":
+            intent = conversation_helper.analyze_intent(
+                "상대방이 더 질문을 하길 원할까?", ["yes", "no"], messages[0].message)
+            if intent == "no":
+                return TurnProcessingResult([MessageText("그럼 더 안물어볼게요!")], [],
+                                            False)
+            if intent == "yes":
+                self.question_left = conversation_helper.ask_followup_question(
+                    self.explanation, 2)
+                self.current_step = "questions"
+
+        if len(self.question_left) == 0:
+            return TurnProcessingResult([MessageText("이제 다 물어봤어요 감사합니다!")], [],
+                                        True)
+        return TurnProcessingResult([MessageText(self.question_left.pop(0))],
+                                    [], False)
 
 
 class HelpClassmateTurnProcessor(TurnProcessor):
@@ -205,7 +270,7 @@ class SuggestSharingTurnProcessor(TurnProcessor):
     pass
 
 
-processor = MessageProcessor(TestTurnRouter())
+processor = MessageProcessor(DemoTurnRouter())
 """
 보낼 메시지 알려줌
 """

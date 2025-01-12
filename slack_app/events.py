@@ -96,6 +96,7 @@ async def message_test(message, say):
 
 @app.message()
 async def every_message(message, say):
+    print("A")
     if message.get("subtype", None) is not None:
         return
 
